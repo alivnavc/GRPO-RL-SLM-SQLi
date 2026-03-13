@@ -13,13 +13,17 @@ src/agent/tools.py.
 
 FEW_SHOT_EXAMPLES = (
     "\n---\n"
+    "IMPORTANT RULES:\n"
+    "- /api/info only returns a list of endpoints. It has NO database interaction. NEVER inject into /api/info.\n"
+    "- Injectable endpoints are those that accept user input: /api/login, /api/search, /api/products/<id>, /api/orders.\n"
+    "- Use a single quote (') as payload to trigger SQL syntax errors (status 500).\n\n"
     "EXAMPLE INTERACTION (follow this format exactly for every response):\n\n"
     "Step 1: Discover endpoints\n"
     "Thought: I need to discover all available endpoints before testing anything.\n"
     "Action: enumerate_endpoints\n"
     'Params: {}\n\n'
-    "Step 2: Inject a payload after seeing /api/login in discovered endpoints\n"
-    "Thought: I will test /api/login username parameter with a single quote to trigger a SQL error.\n"
+    "Step 2: Inject into /api/login (NOT /api/info — that has no DB)\n"
+    "Thought: /api/info is discovery-only. I will test /api/login username with a single quote to trigger a SQL error.\n"
     "Action: inject_payload\n"
     'Params: {"endpoint": "/api/login", "method": "POST", "param": "username", '
     '"payload": "\'", "attack_type": "error_based"}\n\n'
@@ -28,13 +32,18 @@ FEW_SHOT_EXAMPLES = (
     "Action: report_finding\n"
     'Params: {"endpoint": "/api/login", "param": "username", "payload": "\'", '
     '"vuln_type": "error_based", "confidence": 0.9, "evidence": "SQL error in response"}\n\n'
-    "Step 4: Stop when done\n"
+    "Step 4: Test another endpoint\n"
+    "Thought: I will also test /api/search q parameter with a single quote.\n"
+    "Action: inject_payload\n"
+    'Params: {"endpoint": "/api/search", "method": "GET", "param": "q", '
+    '"payload": "\'", "attack_type": "error_based"}\n\n'
+    "Step 5: Stop when done\n"
     "Thought: All injection points have been tested. Assessment complete.\n"
     "Action: stop\n"
     'Params: {"reason": "testing_complete"}\n'
     "---\n"
     "Now follow the EXACT same Thought/Action/Params format for every response. "
-    "Never deviate from this format.\n"
+    "Never inject into /api/info. Never deviate from this format.\n"
 )
 
 

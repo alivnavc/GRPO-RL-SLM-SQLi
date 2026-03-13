@@ -105,23 +105,29 @@ def _run_episode(
             action.tool = "stop"
             action.params = {"reason": "parse_error"}
 
-        # Minimum-steps guard: force enumerate on step 0, prevent premature stop
+        # Minimum-steps guard: force enumerate on step 0, prevent premature stop.
+        # Track override so GRPO does NOT attribute the overridden action's reward
+        # to the model's actual completion (which would be a corrupted training signal).
+        action_overridden = False
         if step_idx == 0 and action.tool != "enumerate_endpoints":
             action.tool = "enumerate_endpoints"
             action.params = {}
+            action_overridden = True
         elif step_idx < 2 and action.tool == "stop":
             action.tool = "enumerate_endpoints"
             action.params = {}
+            action_overridden = True
 
         next_state, reward, done, _info = env.step(action.to_env_action())
-        rollout.steps.append(
-            StepRecord(
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-                completion_ids=completion_ids,
-                reward=reward,
+        if not action_overridden:
+            rollout.steps.append(
+                StepRecord(
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                    completion_ids=completion_ids,
+                    reward=reward,
+                )
             )
-        )
         rollout.total_reward += reward
         state = next_state
 

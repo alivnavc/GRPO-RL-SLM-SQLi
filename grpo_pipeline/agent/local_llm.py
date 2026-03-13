@@ -11,6 +11,8 @@ import os
 import sys
 from typing import List, Optional, Tuple
 
+os.environ.setdefault("PYTORCH_ALLOC_CONF", "expandable_segments:True")
+
 import torch
 import torch.nn.functional as F
 from peft import LoraConfig, PeftModel, get_peft_model
@@ -46,7 +48,7 @@ class LocalLLM:
         self,
         model_name: str = MODEL_NAME,
         device: Optional[str] = None,
-        max_new_tokens: int = 150,
+        max_new_tokens: int = 300,
         temperature: float = 0.8,
     ):
         self.model_name = model_name
@@ -156,6 +158,13 @@ class LocalLLM:
             completion_ids, dtype=torch.long, device=self.device
         ).unsqueeze(0)
         input_ids = torch.cat([prompt_ids, comp_tensor], dim=1)
+
+        # Truncate to MAX_SEQ_LEN to prevent context explosion across steps
+        MAX_SEQ_LEN = 768
+        if input_ids.shape[1] > MAX_SEQ_LEN:
+            keep_prompt = max(MAX_SEQ_LEN - comp_tensor.shape[1], 1)
+            prompt_ids = prompt_ids[:, -keep_prompt:]
+            input_ids = torch.cat([prompt_ids, comp_tensor], dim=1)
 
         model = self.ref_model if use_ref else self.model
         ctx = torch.no_grad() if use_ref else torch.enable_grad()
