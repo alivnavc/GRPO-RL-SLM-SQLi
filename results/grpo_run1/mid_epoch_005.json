@@ -1,0 +1,16 @@
+{
+  "label": "mid_grpo_epoch_5",
+  "dcs": 0.0,
+  "true_positives": 0.0,
+  "false_positives": 0.0,
+  "stc_score": 0.9452723311546841,
+  "ter": 0.0,
+  "tie": 0.409090909090909,
+  "hir": 0.0,
+  "derr": 0.8333333333333334,
+  "sta": 0.0,
+  "avds": 0.0,
+  "afs": 0.436318082788671,
+  "mean_reward": 7.866666666666666,
+  "total_episodes": 6
+}
