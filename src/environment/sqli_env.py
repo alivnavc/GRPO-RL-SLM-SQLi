@@ -406,6 +406,8 @@ class SQLiEnvironment:
             data = resp.json()
             raw_endpoints = data.get("endpoints", [])
 
+            prev_count = len(self._state.discovered_endpoints)
+
             for ep_path in raw_endpoints:
                 method = "POST" if "login" in ep_path else "GET"
                 ep_params = self._infer_params(ep_path)
@@ -413,8 +415,14 @@ class SQLiEnvironment:
                     self._base_url + ep_path, method, {p: "" for p in ep_params}, {}
                 )
 
+            newly_added = [
+                ep.url.replace(self._base_url, "")
+                for ep in self._state.discovered_endpoints[prev_count:]
+            ]
+
             return {
-                "discovered": raw_endpoints,
+                "discovered": newly_added,
+                "all_known": raw_endpoints,
                 "total_known": len(self._state.discovered_endpoints),
             }
         except Exception as exc:
