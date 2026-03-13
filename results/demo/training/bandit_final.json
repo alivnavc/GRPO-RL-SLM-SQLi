@@ -1,0 +1,76 @@
+{
+  "arms": [
+    "systematic_methodical",
+    "aggressive_fuzzer",
+    "evidence_first",
+    "blind_specialist",
+    "chain_exploiter"
+  ],
+  "exploration_constant": 1.41,
+  "counts": {
+    "train_easy_single": {
+      "systematic_methodical": 1,
+      "aggressive_fuzzer": 1,
+      "evidence_first": 1,
+      "blind_specialist": 1,
+      "chain_exploiter": 0
+    },
+    "train_full": {
+      "systematic_methodical": 1,
+      "aggressive_fuzzer": 1,
+      "evidence_first": 1,
+      "blind_specialist": 1,
+      "chain_exploiter": 0
+    },
+    "train_hard_blind": {
+      "systematic_methodical": 1,
+      "aggressive_fuzzer": 1,
+      "evidence_first": 1,
+      "blind_specialist": 1,
+      "chain_exploiter": 1
+    },
+    "train_medium_two": {
+      "systematic_methodical": 1,
+      "aggressive_fuzzer": 1,
+      "evidence_first": 0,
+      "blind_specialist": 0,
+      "chain_exploiter": 0
+    }
+  },
+  "rewards": {
+    "train_easy_single": {
+      "systematic_methodical": 0.3664,
+      "aggressive_fuzzer": 0.3664,
+      "evidence_first": 0.3664,
+      "blind_specialist": 0.3664,
+      "chain_exploiter": 0.0
+    },
+    "train_full": {
+      "systematic_methodical": 1.1431,
+      "aggressive_fuzzer": 1.1431,
+      "evidence_first": 1.1431,
+      "blind_specialist": 1.1431,
+      "chain_exploiter": 0.0
+    },
+    "train_hard_blind": {
+      "systematic_methodical": 0.0064,
+      "aggressive_fuzzer": 0.0064,
+      "evidence_first": 0.0064,
+      "blind_specialist": 0.0064,
+      "chain_exploiter": 0.0064
+    },
+    "train_medium_two": {
+      "systematic_methodical": 1.8598,
+      "aggressive_fuzzer": 1.8598,
+      "evidence_first": 0.0,
+      "blind_specialist": 0.0,
+      "chain_exploiter": 0.0
+    }
+  },
+  "total_pulls": {
+    "train_easy_single": 4,
+    "train_full": 4,
+    "train_hard_blind": 5,
+    "train_medium_two": 2
+  }
+}

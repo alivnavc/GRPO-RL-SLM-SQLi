@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  demo:
+    build: .
+    command: python scripts/demo.py --provider mock --episodes 20
+    volumes:
+      - ./results:/app/results
+    environment:
+      - LLM_PROVIDER=mock
+      - SQLI_APP_PORT=5001
+    ports:
+      - "5001:5001"
+
+  train:
+    build: .
+    command: python scripts/train.py --provider mock --episodes 50 --verbose
+    volumes:
+      - ./results:/app/results
+    environment:
+      - LLM_PROVIDER=${LLM_PROVIDER:-mock}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+
+  evaluate:
+    build: .
+    command: >
+      python scripts/evaluate.py run
+      --split eval
+      --runs 3
+      --bandit-path /app/results/training/bandit_final.json
+    volumes:
+      - ./results:/app/results
+    environment:
+      - LLM_PROVIDER=${LLM_PROVIDER:-mock}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    depends_on:
+      - train
+
+  test:
+    build: .
+    command: python -m pytest tests/ -v --tb=short
+    environment:
+      - LLM_PROVIDER=mock
+      - SQLI_APP_PORT=5095

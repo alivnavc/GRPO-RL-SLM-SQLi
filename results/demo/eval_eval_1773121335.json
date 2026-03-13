@@ -1,0 +1,399 @@
+{
+  "run_id": "eval_1773121335",
+  "config": {
+    "runs_per_scenario": 1,
+    "split": "eval",
+    "strategy_override": null,
+    "bandit_path": null,
+    "save_dir": "results/demo",
+    "llm_provider": "mock",
+    "llm_model": null,
+    "app_port": 5001,
+    "verbose": false
+  },
+  "scenario_results": {
+    "eval_easy": [
+      {
+        "scenario_id": "eval_easy",
+        "strategy_id": "systematic_methodical",
+        "dcs": 0.0,
+        "stc_score": 0.4,
+        "ter": 0.0,
+        "avds": 0.25,
+        "hir": 0.0,
+        "derr": 1.0,
+        "tie": 0.6,
+        "true_positives": 0,
+        "false_positives": 1,
+        "known_vulns": 1,
+        "steps_taken": 20,
+        "tokens_used": 1204,
+        "wall_time_s": 0.02,
+        "total_reward": 11.05,
+        "termination_reason": "budget_exhausted",
+        "composite_score": 0.3225,
+        "meets_thresholds": {
+          "dcs_ok": false,
+          "stc_ok": false,
+          "ter_ok": false,
+          "avds_ok": false,
+          "hir_ok": true,
+          "derr_ok": true,
+          "tie_ok": true,
+          "fp_zero": false
+        },
+        "run_n": 0,
+        "trajectory_len": 20
+      }
+    ],
+    "eval_medium": [
+      {
+        "scenario_id": "eval_medium",
+        "strategy_id": "systematic_methodical",
+        "dcs": 0.0,
+        "stc_score": 0.2667,
+        "ter": 0.0,
+        "avds": 0.25,
+        "hir": 0.0,
+        "derr": 1.0,
+        "tie": 0.5667,
+        "true_positives": 0,
+        "false_positives": 1,
+        "known_vulns": 2,
+        "steps_taken": 30,
+        "tokens_used": 1829,
+        "wall_time_s": 0.04,
+        "total_reward": 15.55,
+        "termination_reason": "budget_exhausted",
+        "composite_score": 0.2879,
+        "meets_thresholds": {
+          "dcs_ok": false,
+          "stc_ok": false,
+          "ter_ok": false,
+          "avds_ok": false,
+          "hir_ok": true,
+          "derr_ok": true,
+          "tie_ok": false,
+          "fp_zero": false
+        },
+        "run_n": 0,
+        "trajectory_len": 30
+      }
+    ],
+    "eval_blind": [
+      {
+        "scenario_id": "eval_blind",
+        "strategy_id": "systematic_methodical",
+        "dcs": 0.0,
+        "stc_score": 0.16,
+        "ter": 0.0,
+        "avds": 0.25,
+        "hir": 0.0,
+        "derr": 1.0,
+        "tie": 0.54,
+        "true_positives": 0,
+        "false_positives": 1,
+        "known_vulns": 2,
+        "steps_taken": 50,
+        "tokens_used": 3079,
+        "wall_time_s": 0.05,
+        "total_reward": 24.55,
+        "termination_reason": "budget_exhausted",
+        "composite_score": 0.2603,
+        "meets_thresholds": {
+          "dcs_ok": false,
+          "stc_ok": false,
+          "ter_ok": false,
+          "avds_ok": false,
+          "hir_ok": true,
+          "derr_ok": true,
+          "tie_ok": false,
+          "fp_zero": false
+        },
+        "run_n": 0,
+        "trajectory_len": 50
+      }
+    ]
+  },
+  "scenario_aggregates": {
+    "eval_easy": {
+      "n_episodes": 1,
+      "dcs": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "median": 0.0
+      },
+      "stc_score": {
+        "mean": 0.4,
+        "std": 0.0,
+        "min": 0.4,
+        "max": 0.4,
+        "median": 0.4
+      },
+      "ter": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "median": 0.0
+      },
+      "avds": {
+        "mean": 0.25,
+        "std": 0.0,
+        "min": 0.25,
+        "max": 0.25,
+        "median": 0.25
+      },
+      "hir": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "median": 0.0
+      },
+      "derr": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0,
+        "median": 1.0
+      },
+      "tie": {
+        "mean": 0.6,
+        "std": 0.0,
+        "min": 0.6,
+        "max": 0.6,
+        "median": 0.6
+      },
+      "composite_score": {
+        "mean": 0.3225,
+        "std": 0.0,
+        "min": 0.3225,
+        "max": 0.3225,
+        "median": 0.3225
+      },
+      "total_reward": {
+        "mean": 11.05,
+        "std": 0.0,
+        "min": 11.05,
+        "max": 11.05,
+        "median": 11.05
+      },
+      "tp_rate": 0.0,
+      "fp_count_total": 1,
+      "false_discovery_rate": 1.0
+    },
+    "eval_medium": {
+      "n_episodes": 1,
+      "dcs": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "median": 0.0
+      },
+      "stc_score": {
+        "mean": 0.2667,
+        "std": 0.0,
+        "min": 0.2667,
+        "max": 0.2667,
+        "median": 0.2667
+      },
+      "ter": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "median": 0.0
+      },
+      "avds": {
+        "mean": 0.25,
+        "std": 0.0,
+        "min": 0.25,
+        "max": 0.25,
+        "median": 0.25
+      },
+      "hir": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "median": 0.0
+      },
+      "derr": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0,
+        "median": 1.0
+      },
+      "tie": {
+        "mean": 0.5667,
+        "std": 0.0,
+        "min": 0.5667,
+        "max": 0.5667,
+        "median": 0.5667
+      },
+      "composite_score": {
+        "mean": 0.2879,
+        "std": 0.0,
+        "min": 0.2879,
+        "max": 0.2879,
+        "median": 0.2879
+      },
+      "total_reward": {
+        "mean": 15.55,
+        "std": 0.0,
+        "min": 15.55,
+        "max": 15.55,
+        "median": 15.55
+      },
+      "tp_rate": 0.0,
+      "fp_count_total": 1,
+      "false_discovery_rate": 1.0
+    },
+    "eval_blind": {
+      "n_episodes": 1,
+      "dcs": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "median": 0.0
+      },
+      "stc_score": {
+        "mean": 0.16,
+        "std": 0.0,
+        "min": 0.16,
+        "max": 0.16,
+        "median": 0.16
+      },
+      "ter": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "median": 0.0
+      },
+      "avds": {
+        "mean": 0.25,
+        "std": 0.0,
+        "min": 0.25,
+        "max": 0.25,
+        "median": 0.25
+      },
+      "hir": {
+        "mean": 0.0,
+        "std": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "median": 0.0
+      },
+      "derr": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0,
+        "median": 1.0
+      },
+      "tie": {
+        "mean": 0.54,
+        "std": 0.0,
+        "min": 0.54,
+        "max": 0.54,
+        "median": 0.54
+      },
+      "composite_score": {
+        "mean": 0.2603,
+        "std": 0.0,
+        "min": 0.2603,
+        "max": 0.2603,
+        "median": 0.2603
+      },
+      "total_reward": {
+        "mean": 24.55,
+        "std": 0.0,
+        "min": 24.55,
+        "max": 24.55,
+        "median": 24.55
+      },
+      "tp_rate": 0.0,
+      "fp_count_total": 1,
+      "false_discovery_rate": 1.0
+    }
+  },
+  "overall_aggregate": {
+    "n_episodes": 3,
+    "dcs": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "median": 0.0
+    },
+    "stc_score": {
+      "mean": 0.2756,
+      "std": 0.0982,
+      "min": 0.16,
+      "max": 0.4,
+      "median": 0.2667
+    },
+    "ter": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "median": 0.0
+    },
+    "avds": {
+      "mean": 0.25,
+      "std": 0.0,
+      "min": 0.25,
+      "max": 0.25,
+      "median": 0.25
+    },
+    "hir": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "median": 0.0
+    },
+    "derr": {
+      "mean": 1.0,
+      "std": 0.0,
+      "min": 1.0,
+      "max": 1.0,
+      "median": 1.0
+    },
+    "tie": {
+      "mean": 0.5689,
+      "std": 0.0245,
+      "min": 0.54,
+      "max": 0.6,
+      "median": 0.5667
+    },
+    "composite_score": {
+      "mean": 0.2902,
+      "std": 0.0254,
+      "min": 0.2603,
+      "max": 0.3225,
+      "median": 0.2879
+    },
+    "total_reward": {
+      "mean": 17.05,
+      "std": 5.6125,
+      "min": 11.05,
+      "max": 24.55,
+      "median": 15.55
+    },
+    "tp_rate": 0.0,
+    "fp_count_total": 3,
+    "false_discovery_rate": 1.0
+  },
+  "afs": 0.2926,
+  "fdr_on_clean": 0.0,
+  "timestamp": 1773121335.0711644
+}
