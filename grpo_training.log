@@ -1,9 +1,9 @@
 [Logger] Writing all output to grpo_training.log
-╭──────────────────────────────────── GRPO Pipeline ─────────────────────────────────────╮
-│ GRPO Training — SQLi Agent                                                             │
-│ Model: Qwen/Qwen2.5-Coder-0.5B-Instruct                                                │
-│ Epochs: 10  |  G=4  |  lr=2e-05  |  β=0.01                                             │
-╰────────────────────────────────────────────────────────────────────────────────────────╯
+╭───────────────────────────────────────────────────────────────────────────────────── GRPO Pipeline ──────────────────────────────────────────────────────────────────────────────────────╮
+│ GRPO Training — SQLi Agent                                                                                                                                                               │
+│ Model: Qwen/Qwen2.5-Coder-0.5B-Instruct                                                                                                                                                  │
+│ Epochs: 10  |  G=4  |  lr=2e-05  |  β=0.01                                                                                                                                               │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 
 Phase 1: Starting vulnerable target application...
  * Serving Flask app 'src.environment.vulnerable_app'
@@ -12,91 +12,14 @@ Phase 1: Starting vulnerable target application...
     RESPONSE_STATUS: 200
 
 Phase 2: Loading Qwen2.5-Coder-0.5B-Instruct with LoRA...
-[LocalLLM] Loading Qwen/Qwen2.5-Coder-0.5B-Instruct on cpu ...
+[LocalLLM] Loading Qwen/Qwen2.5-Coder-0.5B-Instruct on cuda ...
 trainable params: 2,162,688 || all params: 496,195,456 || trainable%: 0.4359
-[LocalLLM] Ready. Trainable params above. Device: cpu
+[LocalLLM] Ready. Trainable params above. Device: cuda
 
 Phase 3: Pre-GRPO evaluation (epoch 0 — untrained weights)...
 
 [Evaluator] Running eval: pre_grpo_epoch_0
   Scenario: Eval: Easy Tier | episode 1/2
-------------------------------------------------------------
-  ▶ STEP 0 | enumerate_endpoints
-  → GET /api/info
-    RESPONSE_STATUS: 200
-    RESPONSE: status=n/a
-    REWARD  : +3.40  |  findings so far: 0
-------------------------------------------------------------
-  ▶ STEP 1 | enumerate_endpoints
-  → GET /api/info
-    RESPONSE_STATUS: 200
-    RESPONSE: status=n/a
-    REWARD  : +3.20  |  findings so far: 0
-------------------------------------------------------------
-  ▶ STEP 2 | inject_payload
-    REQUEST : POST /api/login
-    PARAM   : 'username'
-    PAYLOAD : " OR '1'='1"
-  → POST /api/login
-    REQUEST_BODY : {'username': " OR '1'='1"}
-    RESPONSE_STATUS: 500
-    RESPONSE: status=500
-    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500']  ← injection detected!
-    BODY    : '{"message":"near \\"1\\": syntax error","status":"error"} '
-    REWARD  : +3.20  |  findings so far: 0
-------------------------------------------------------------
-  ▶ STEP 3 | inject_payload
-    REQUEST : POST /api/login
-    PARAM   : 'username'
-    PAYLOAD : "' OR '1'='1"
-  → POST /api/login
-    REQUEST_BODY : {'username': "' OR '1'='1"}
-    RESPONSE_STATUS: 401
-    RESPONSE: status=401
-    BODY    : '{"message":"Invalid credentials","status":"fail"} '
-    REWARD  : -0.00  |  findings so far: 0
-------------------------------------------------------------
-  ▶ STEP 4 | analyze_response
-    RESPONSE: status=n/a
-    REWARD  : -0.10  |  findings so far: 0
-------------------------------------------------------------
-  ▶ STEP 5 | analyze_response
-    RESPONSE: status=n/a
-    REWARD  : -0.10  |  findings so far: 0
-------------------------------------------------------------
-  ▶ STEP 6 | stop  reason='parse_error'
-    RESPONSE: status=n/a
-    REWARD  : -0.10  |  findings so far: 0
-  Scenario: Eval: Easy Tier | episode 2/2
-------------------------------------------------------------
-  ▶ STEP 0 | enumerate_endpoints
-  → GET /api/info
-    RESPONSE_STATUS: 200
-    RESPONSE: status=n/a
-    REWARD  : +3.40  |  findings so far: 0
-------------------------------------------------------------
-  ▶ STEP 1 | report_finding
-    ENDPOINT: /api/login  PARAM=''
-    TYPE    : sql_injection  CONF=0.9
-    EVIDENCE: 'SQL error in response'
-    RESPONSE: status=n/a
-    REWARD  : -2.95  |  findings so far: 1
-------------------------------------------------------------
-  ▶ STEP 2 | inject_payload
-    REQUEST : POST /api/login
-    PARAM   : 'type=sql_injection'
-    PAYLOAD : 'AND 1=1'
-  → POST /api/login
-    REQUEST_BODY : {'type=sql_injection': 'AND 1=1'}
-    RESPONSE_STATUS: 401
-    RESPONSE: status=401
-    BODY    : '{"message":"Invalid credentials","status":"fail"} '
-    REWARD  : -0.00  |  findings so far: 1
-------------------------------------------------------------
-  ▶ STEP 3 | stop  reason='parse_error'
-    RESPONSE: status=n/a
-    REWARD  : +0.90  |  findings so far: 1
-  Scenario: Eval: Medium Tier | episode 1/2
 ------------------------------------------------------------
   ▶ STEP 0 | enumerate_endpoints
   → GET /api/info
@@ -115,54 +38,10 @@ Phase 3: Pre-GRPO evaluation (epoch 0 — untrained weights)...
     BODY    : '{"message":"Invalid credentials","status":"fail"} '
     REWARD  : -0.00  |  findings so far: 0
 ------------------------------------------------------------
-  ▶ STEP 2 | inject_payload
-    REQUEST : POST /api/login
-    PARAM   : 'username'
-    PAYLOAD : "1'"
-  → POST /api/login
-    REQUEST_BODY : {'username': "1'"}
-    RESPONSE_STATUS: 500
-    RESPONSE: status=500
-    SIGNALS : ['sql_error:unrecognized token', 'server_error:500']  ← injection detected!
-    BODY    : '{"message":"unrecognized token: \\"\'1\'\' AND password=\'\'\\"","status":"error"} '
-    REWARD  : +1.70  |  findings so far: 0
-------------------------------------------------------------
-  ▶ STEP 3 | report_finding
-    ENDPOINT: GET http://127.0.0.1:5001/api/info  PARAM=''
-    TYPE    : error_based  CONF=0.9
-    EVIDENCE: 'SQL error in response'
+  ▶ STEP 2 | stop  reason='parse_error'
     RESPONSE: status=n/a
-    REWARD  : -2.95  |  findings so far: 1
-------------------------------------------------------------
-  ▶ STEP 4 | inject_payload
-    REQUEST : POST /api/login
-    PARAM   : 'username'
-    PAYLOAD : 'AND 1=1'
-  → POST /api/login
-    REQUEST_BODY : {'username': 'AND 1=1'}
-    RESPONSE_STATUS: 401
-    RESPONSE: status=401
-    BODY    : '{"message":"Invalid credentials","status":"fail"} '
-    REWARD  : -0.00  |  findings so far: 1
-------------------------------------------------------------
-  ▶ STEP 5 | report_finding
-    ENDPOINT: http://127.0.0.1:5001/api/info  PARAM='type=error_based'
-    TYPE    : error_based  CONF=0.9
-    EVIDENCE: 'SQL error in response'
-    RESPONSE: status=n/a
-    REWARD  : -2.95  |  findings so far: 2
-------------------------------------------------------------
-  ▶ STEP 6 | report_finding
-    ENDPOINT: /api/info  PARAM='type=error_based'
-    TYPE    : error_based  CONF=0.9
-    EVIDENCE: 'SQL error in response'
-    RESPONSE: status=n/a
-    REWARD  : -2.95  |  findings so far: 3
-------------------------------------------------------------
-  ▶ STEP 7 | stop  reason='parse_error'
-    RESPONSE: status=n/a
-    REWARD  : +0.90  |  findings so far: 3
-  Scenario: Eval: Medium Tier | episode 2/2
+    REWARD  : -0.10  |  findings so far: 0
+  Scenario: Eval: Easy Tier | episode 2/2
 ------------------------------------------------------------
   ▶ STEP 0 | enumerate_endpoints
   → GET /api/info
@@ -170,50 +49,35 @@ Phase 3: Pre-GRPO evaluation (epoch 0 — untrained weights)...
     RESPONSE: status=n/a
     REWARD  : +3.40  |  findings so far: 0
 ------------------------------------------------------------
-  ▶ STEP 1 | enumerate_endpoints
+  ▶ STEP 1 | report_finding
+    ENDPOINT: /api/login  PARAM='username'
+    TYPE    : error_based  CONF=0.9
+    EVIDENCE: 'SQL error in response'
+    RESPONSE: status=n/a
+    REWARD  : +6.55  |  findings so far: 1
+------------------------------------------------------------
+  ▶ STEP 2 | stop  reason='parse_error'
+    RESPONSE: status=n/a
+    REWARD  : +0.90  |  findings so far: 1
+  Scenario: Eval: Medium Tier | episode 1/2
+------------------------------------------------------------
+  ▶ STEP 0 | enumerate_endpoints
   → GET /api/info
     RESPONSE_STATUS: 200
     RESPONSE: status=n/a
-    REWARD  : +3.20  |  findings so far: 0
+    REWARD  : +3.40  |  findings so far: 0
 ------------------------------------------------------------
-  ▶ STEP 2 | inject_payload
-    REQUEST : POST /api/login
-    PARAM   : 'username'
-    PAYLOAD : "1'"
-  → POST /api/login
-    REQUEST_BODY : {'username': "1'"}
-    RESPONSE_STATUS: 500
-    RESPONSE: status=500
-    SIGNALS : ['sql_error:unrecognized token', 'server_error:500']  ← injection detected!
-    BODY    : '{"message":"unrecognized token: \\"\'1\'\' AND password=\'\'\\"","status":"error"} '
-    REWARD  : +1.70  |  findings so far: 0
-------------------------------------------------------------
-  ▶ STEP 3 | inject_payload
-    REQUEST : POST /api/login
-    PARAM   : 'username'
-    PAYLOAD : "' OR '1'='1"
-  → POST /api/login
-    REQUEST_BODY : {'username': "' OR '1'='1"}
-    RESPONSE_STATUS: 401
-    RESPONSE: status=401
-    BODY    : '{"message":"Invalid credentials","status":"fail"} '
-    REWARD  : -0.00  |  findings so far: 0
-------------------------------------------------------------
-  ▶ STEP 4 | inject_payload
-    REQUEST : POST /api/login
-    PARAM   : 'username'
-    PAYLOAD : "' OR '1'='1"
-  → POST /api/login
-    REQUEST_BODY : {'username': "' OR '1'='1"}
-    RESPONSE_STATUS: 401
-    RESPONSE: status=401
-    BODY    : '{"message":"Invalid credentials","status":"fail"} '
-    REWARD  : -0.00  |  findings so far: 0
-------------------------------------------------------------
-  ▶ STEP 5 | stop  reason='parse_error'
+  ▶ STEP 1 | report_finding
+    ENDPOINT: /api/login  PARAM='username'
+    TYPE    : error_based  CONF=0.9
+    EVIDENCE: 'SQL error in response'
     RESPONSE: status=n/a
-    REWARD  : -0.10  |  findings so far: 0
-  Scenario: Eval: Blind Tier | episode 1/2
+    REWARD  : +6.55  |  findings so far: 1
+------------------------------------------------------------
+  ▶ STEP 2 | stop  reason='parse_error'
+    RESPONSE: status=n/a
+    REWARD  : -0.10  |  findings so far: 1
+  Scenario: Eval: Medium Tier | episode 2/2
 ------------------------------------------------------------
   ▶ STEP 0 | enumerate_endpoints
   → GET /api/info
@@ -232,11 +96,847 @@ Phase 3: Pre-GRPO evaluation (epoch 0 — untrained weights)...
     BODY    : '{"message":"Invalid credentials","status":"fail"} '
     REWARD  : -0.00  |  findings so far: 0
 ------------------------------------------------------------
-  ▶ STEP 2 | analyze_response
+  ▶ STEP 2 | stop  reason='parse_error'
     RESPONSE: status=n/a
     REWARD  : -0.10  |  findings so far: 0
+  Scenario: Eval: Blind Tier | episode 1/2
+------------------------------------------------------------
+  ▶ STEP 0 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.40  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 1 | report_finding
+    ENDPOINT: /api/health  PARAM=''
+    TYPE    : blind  CONF=0.9
+    EVIDENCE: 'Health endpoint not found'
+    RESPONSE: status=n/a
+    REWARD  : -2.95  |  findings so far: 1
+------------------------------------------------------------
+  ▶ STEP 2 | stop  reason='parse_error'
+    RESPONSE: status=n/a
+    REWARD  : -0.10  |  findings so far: 1
+  Scenario: Eval: Blind Tier | episode 2/2
+------------------------------------------------------------
+  ▶ STEP 0 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.40  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 1 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 2 | inject_payload
+    REQUEST : POST /api/users/<id>/profile
+    PARAM   : 'id'
+    PAYLOAD : 'AND 1=1'
+  → POST /api/users/<id>/profile
+    REQUEST_BODY : {'id': 'AND 1=1'}
+    RESPONSE_STATUS: 405
+    RESPONSE: status=405
+    BODY    : '<!doctype html> <html lang=en> <title>405 Method Not Allowed</title> <h1>Method Not Allowed</h1> <p>The method is not allowed for the requested URL.</p> '
+    REWARD  : -0.00  |  findings so far: 0
 ------------------------------------------------------------
   ▶ STEP 3 | stop  reason='parse_error'
+    RESPONSE: status=n/a
+    REWARD  : -0.10  |  findings so far: 0
+[Evaluator] pre_grpo_epoch_0: DCS=0.250  AFS=0.576  TP=0.3  FP=0.2
+[Evaluator] Snapshot saved → results/grpo/pre_grpo.json
+
+Phase 4: GRPO Training (10 epochs, G=4 rollouts/scenario)...
+  Epoch      Loss    MeanReward            Range
+--------------------------------------------------
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': '1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': '1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "1'='1"}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR '1'='1"}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/health
+    REQUEST_BODY : {'params': 'AND 1=1'}
+    RESPONSE_STATUS: 405
+  → GET /api/health
+    QUERY_PARAMS : {'params': 'AND 1=1'}
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "1'"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/products/<id>
+    QUERY_PARAMS : {'id': 'AND 1=2'}
+    RESPONSE_STATUS: 500
+  → GET /api/products/<id>
+    QUERY_PARAMS : {'id': 'AND 1=2'}
+    RESPONSE_STATUS: 500
+  → GET /api/products/<id>
+    QUERY_PARAMS : {'id': '1=1'}
+    RESPONSE_STATUS: 500
+  → GET /api/products/<id>
+    QUERY_PARAMS : {'id': 'AND 1=2'}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/health
+    QUERY_PARAMS : {'': 'AND 1=1'}
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+[LocalLLM] LoRA checkpoint saved → results/grpo_checkpoints/epoch_001
+  Epoch   1 | loss=0.0144 | reward=  6.06 [-2.1 … 16.3]
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "1'"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': '1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR '1'='1"}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR '1'='1"}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR 1=1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR '1'='1"}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': '1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/products/<id>
+    QUERY_PARAMS : {'id': 'AND 1=1'}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "' UNION ALL SELECT 1, 1 FROM information_schema.tables WHERE table_schema = 'public'"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1'"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': 'union(1=1, 1=2)'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "type=union_based&value=' UNION ALL SELECT 1 FROM users"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'type=union_based': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'type=union_based': "' UNION ALL SELECT * FROM users WHERE id=1"}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'type=union_based': ' UNION ALL SELECT 1 FROM users'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'type=union_based': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'type=union_based': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/products/search
+    QUERY_PARAMS : {'q': 'AND 1=1'}
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/info
+    REQUEST_BODY : {'type=blind_boolean_order_filter': 'AND 1=1'}
+    RESPONSE_STATUS: 405
+  → GET /api/info
+    QUERY_PARAMS : {'type=blind_boolean_order_filter': "' OR 1=1"}
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/products/search
+    QUERY_PARAMS : {'q': "' OR '1'='1"}
+    RESPONSE_STATUS: 200
+  → POST /api/products/search
+    REQUEST_BODY : {'q': '1=1'}
+    RESPONSE_STATUS: 405
+  → POST /api/products/search
+    REQUEST_BODY : {'q': '1'}
+    RESPONSE_STATUS: 405
+  → POST /api/products/search
+    REQUEST_BODY : {'q': 'AND 1=1'}
+    RESPONSE_STATUS: 405
+  → POST /api/products/search
+    REQUEST_BODY : {'q': 'AND 1=1'}
+    RESPONSE_STATUS: 405
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/products/search
+    QUERY_PARAMS : {'q': "' OR '1'='1"}
+    RESPONSE_STATUS: 200
+  → GET /api/products/search
+    QUERY_PARAMS : {'q': "' OR '1'='1"}
+    RESPONSE_STATUS: 200
+  → POST /api/products/search
+    REQUEST_BODY : {'q': 'AND 1=1'}
+    RESPONSE_STATUS: 405
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': '1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "1'"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+[LocalLLM] LoRA checkpoint saved → results/grpo_checkpoints/epoch_002
+  Epoch   2 | loss=0.0038 | reward=  5.61 [0.2 … 16.1]
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "1'"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': '1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': '1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "1' OR '1'='1"}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "1'"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR 1=1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "union('1', '1')"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "' UNION SELECT 1 FROM users;"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR '1'='1"}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "1'"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+[LocalLLM] LoRA checkpoint saved → results/grpo_checkpoints/epoch_003
+  Epoch   3 | loss=-0.0402 | reward=  5.67 [-2.7 … 18.0]
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "username=''"}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': '1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "' UNION ALL SELECT 1, 2 FROM products;"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR '1'='1"}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/products/<id>
+    QUERY_PARAMS : {'id': 'AND 1=1'}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/products/search
+    QUERY_PARAMS : {'q': 'AND 1=1'}
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/orders
+    QUERY_PARAMS : {'status': 'AND 1=2'}
+    RESPONSE_STATUS: 200
+  → GET /api/orders
+    QUERY_PARAMS : {'status': 'AND 1=1'}
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/orders
+    REQUEST_BODY : {'status': 'AND 1=2'}
+    RESPONSE_STATUS: 405
+  → GET /api/orders
+    QUERY_PARAMS : {'status': 'AND 1=1'}
+    RESPONSE_STATUS: 200
+  → GET /api/orders
+    QUERY_PARAMS : {'status': 'AND 1=2'}
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/products/<id>
+    QUERY_PARAMS : {'id': 'AND 1=1'}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "1' OR 1='1"}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': '1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "1' OR 1='1"}
+    RESPONSE_STATUS: 401
+[LocalLLM] LoRA checkpoint saved → results/grpo_checkpoints/epoch_004
+  Epoch   4 | loss=-0.0394 | reward=  5.78 [3.2 … 9.6]
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR '1'='1"}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR '1'='1"}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR '1'='1"}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR 1=1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': ' UNION SELECT * FROM users WHERE id = 1 UNION SELECT * FROM products WHERE id = 2'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/products/<id>
+    QUERY_PARAMS : {'id': "' AND 1=1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': '1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': '1=1 AND 1=2'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/products/search
+    QUERY_PARAMS : {'q': "' OR '1'='1"}
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR 1='1"}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR 1=1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+[LocalLLM] LoRA checkpoint saved → results/grpo_checkpoints/epoch_005
+  Epoch   5 | loss=-0.0312 | reward=  7.03 [3.1 … 12.5]
+
+[Evaluator] Running eval: mid_grpo_epoch_5
+  Scenario: Eval: Easy Tier | episode 1/2
+------------------------------------------------------------
+  ▶ STEP 0 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.40  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 1 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 2 | stop  reason='parse_error'
+    RESPONSE: status=n/a
+    REWARD  : -0.10  |  findings so far: 0
+  Scenario: Eval: Easy Tier | episode 2/2
+------------------------------------------------------------
+  ▶ STEP 0 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.40  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 1 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 2 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"near \\"1\\": syntax error","status":"error"} '
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 3 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "' OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR '1'='1"}
+    RESPONSE_STATUS: 401
+    RESPONSE: status=401
+    BODY    : '{"message":"Invalid credentials","status":"fail"} '
+    REWARD  : -0.00  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 4 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "' OR 1=1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR 1=1"}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:unrecognized token', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"unrecognized token: \\"\' AND password=\'\'\\"","status":"error"} '
+    REWARD  : +1.70  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 5 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : 'AND 1=1'
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+    RESPONSE: status=401
+    BODY    : '{"message":"Invalid credentials","status":"fail"} '
+    REWARD  : -0.00  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 6 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "username='admin'"
+  → POST /api/login
+    REQUEST_BODY : {'username': "username='admin'"}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500', 'credential_exposure']  ← injection detected!
+    BODY    : '{"message":"near \\"admin\\": syntax error","status":"error"} '
+    REWARD  : +5.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 7 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : 'AND 1=1'
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+    RESPONSE: status=401
+    BODY    : '{"message":"Invalid credentials","status":"fail"} '
+    REWARD  : -0.00  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 8 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : " OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"near \\"1\\": syntax error","status":"error"} '
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 9 | http_request
+    REQUEST : POST http://127.0.0.1:5001/api/login
+    PARAM   : ''
+    PAYLOAD : ''
+  → POST /api/login
+    RESPONSE_STATUS: 401
+    RESPONSE: status=401
+    BODY    : '{"message":"Invalid credentials","status":"fail"} '
+    REWARD  : -0.30  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 10 | stop  reason='parse_error'
+    RESPONSE: status=n/a
+    REWARD  : -0.10  |  findings so far: 0
+  Scenario: Eval: Medium Tier | episode 1/2
+------------------------------------------------------------
+  ▶ STEP 0 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.40  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 1 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "' OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR '1'='1"}
+    RESPONSE_STATUS: 401
+    RESPONSE: status=401
+    BODY    : '{"message":"Invalid credentials","status":"fail"} '
+    REWARD  : -0.00  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 2 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "' OR 1=1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR 1=1"}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:unrecognized token', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"unrecognized token: \\"\' AND password=\'\'\\"","status":"error"} '
+    REWARD  : +1.70  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 3 | stop  reason='parse_error'
+    RESPONSE: status=n/a
+    REWARD  : -0.10  |  findings so far: 0
+  Scenario: Eval: Medium Tier | episode 2/2
+------------------------------------------------------------
+  ▶ STEP 0 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.40  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 1 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : 'AND 1=1'
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+    RESPONSE: status=401
+    BODY    : '{"message":"Invalid credentials","status":"fail"} '
+    REWARD  : -0.00  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 2 | stop  reason='parse_error'
+    RESPONSE: status=n/a
+    REWARD  : -0.10  |  findings so far: 0
+  Scenario: Eval: Blind Tier | episode 1/2
+------------------------------------------------------------
+  ▶ STEP 0 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.40  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 1 | inject_payload
+    REQUEST : GET /api/users/<id>/profile
+    PARAM   : 'id'
+    PAYLOAD : 'AND 1=1'
+  → GET /api/users/<id>/profile
+    QUERY_PARAMS : {'id': 'AND 1=1'}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"near \\"<\\": syntax error","status":"error"} '
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 2 | stop  reason='parse_error'
     RESPONSE: status=n/a
     REWARD  : -0.10  |  findings so far: 0
   Scenario: Eval: Blind Tier | episode 2/2
@@ -253,73 +953,584 @@ Phase 3: Pre-GRPO evaluation (epoch 0 — untrained weights)...
     RESPONSE: status=n/a
     REWARD  : +3.20  |  findings so far: 0
 ------------------------------------------------------------
-  ▶ STEP 2 | report_finding
-    ENDPOINT: /api/orders  PARAM='status'
-    TYPE    : union  CONF=0.9
-    EVIDENCE: 'Union of SQL error in response'
-    RESPONSE: status=n/a
-    REWARD  : +6.55  |  findings so far: 1
+  ▶ STEP 2 | inject_payload
+    REQUEST : POST /api/users/<id>/profile
+    PARAM   : 'id'
+    PAYLOAD : '1=1'
+  → POST /api/users/<id>/profile
+    REQUEST_BODY : {'id': '1=1'}
+    RESPONSE_STATUS: 405
+    RESPONSE: status=405
+    BODY    : '<!doctype html> <html lang=en> <title>405 Method Not Allowed</title> <h1>Method Not Allowed</h1> <p>The method is not allowed for the requested URL.</p> '
+    REWARD  : -0.00  |  findings so far: 0
 ------------------------------------------------------------
-  ▶ STEP 3 | analyze_response
-    RESPONSE: status=n/a
-    REWARD  : -0.10  |  findings so far: 1
+  ▶ STEP 3 | inject_payload
+    REQUEST : POST /api/orders
+    PARAM   : 'status'
+    PAYLOAD : '1=1'
+  → POST /api/orders
+    REQUEST_BODY : {'status': '1=1'}
+    RESPONSE_STATUS: 405
+    RESPONSE: status=405
+    BODY    : '<!doctype html> <html lang=en> <title>405 Method Not Allowed</title> <h1>Method Not Allowed</h1> <p>The method is not allowed for the requested URL.</p> '
+    REWARD  : -0.00  |  findings so far: 0
 ------------------------------------------------------------
-  ▶ STEP 4 | report_finding
-    ENDPOINT: http://127.0.0.1:5001/api/orders  PARAM='status'
-    TYPE    : union  CONF=0.9
-    EVIDENCE: 'Union of SQL error in response'
+  ▶ STEP 4 | analyze_response
     RESPONSE: status=n/a
-    REWARD  : +6.55  |  findings so far: 2
+    REWARD  : -0.10  |  findings so far: 0
 ------------------------------------------------------------
-  ▶ STEP 5 | analyze_response
+  ▶ STEP 5 | stop  reason='parse_error'
     RESPONSE: status=n/a
-    REWARD  : -0.10  |  findings so far: 2
-------------------------------------------------------------
-  ▶ STEP 6 | analyze_response
-    RESPONSE: status=n/a
-    REWARD  : -0.10  |  findings so far: 2
-------------------------------------------------------------
-  ▶ STEP 7 | stop  reason='parse_error'
-    RESPONSE: status=n/a
-    REWARD  : +0.90  |  findings so far: 2
-[Evaluator] pre_grpo_epoch_0: DCS=0.333  AFS=0.571  TP=0.5  FP=0.5
-[Evaluator] Snapshot saved → results/grpo/pre_grpo.json
-
-Phase 4: GRPO Training (10 epochs, G=4 rollouts/scenario)...
-  Epoch      Loss    MeanReward            Range
---------------------------------------------------
+    REWARD  : -0.10  |  findings so far: 0
+[Evaluator] mid_grpo_epoch_5: DCS=0.000  AFS=0.436  TP=0.0  FP=0.0
+[Evaluator] Snapshot saved → results/grpo/mid_epoch_005.json
+  → Mid-eval: DCS=0.000  AFS=0.436
   → GET /api/info
     RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': '1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "1'='1"}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "1'"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': '1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/products/<id>
+    QUERY_PARAMS : {'id': '1=1'}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/products/<id>
+    QUERY_PARAMS : {'id': '1=1'}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/products/<id>
+    QUERY_PARAMS : {'id': 'AND 1=1'}
+    RESPONSE_STATUS: 500
+  → GET /api/users/<id>/profile
+    QUERY_PARAMS : {'id': '1'}
+    RESPONSE_STATUS: 500
+  → GET /api/users/<id>/profile
+    QUERY_PARAMS : {'id': 'AND 1=1'}
+    RESPONSE_STATUS: 500
+  → GET /api/products/<id>
+    QUERY_PARAMS : {'id': 'AND 1=2'}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
   → GET /api/info
     RESPONSE_STATUS: 200
   → POST /api/login
     REQUEST_BODY : {'username': "' OR '1'='1"}
     RESPONSE_STATUS: 401
+[LocalLLM] LoRA checkpoint saved → results/grpo_checkpoints/epoch_006
+  Epoch   6 | loss=0.0001 | reward=  7.53 [3.1 … 22.5]
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
   → GET /api/info
     RESPONSE_STATUS: 200
   → POST /api/login
-    REQUEST_BODY : {'username': "OR '1'='1'"}
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "1'"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR '1'='1"}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': " UNION ALL SELECT 1, 1 FROM information_schema.tables WHERE table_schema = 'public' LIMIT 1;"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "1'='1"}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': " UNION ALL SELECT 1 FROM information_schema.tables WHERE table_name = 'users'"}
     RESPONSE_STATUS: 500
   → POST /api/login
     REQUEST_BODY : {'username': "OR '1'='1"}
     RESPONSE_STATUS: 500
   → POST /api/login
-    REQUEST_BODY : {'username': "' OR '1'='1"}
     RESPONSE_STATUS: 401
   → GET /api/info
     RESPONSE_STATUS: 200
   → POST /api/login
-    REQUEST_BODY : {'username': "' OR '1'='1"}
-    RESPONSE_STATUS: 401
-  → GET /api/products/<id>
-    QUERY_PARAMS : {'id': '1=1'}
+    REQUEST_BODY : {'username': " UNION ALL SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'users'"}
     RESPONSE_STATUS: 500
-  → GET /api/products/<id>
-    QUERY_PARAMS : {'id': "' OR '1'='1"}
-    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/products/search
+    QUERY_PARAMS : {'q': 'AND 1=1'}
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/orders
+    QUERY_PARAMS : {'status': '1=1'}
+    RESPONSE_STATUS: 200
+  → GET /api/products/search
+    QUERY_PARAMS : {'q': 'AND 1=1'}
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/products/search
+    REQUEST_BODY : {'q': '1'}
+    RESPONSE_STATUS: 405
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/orders
+    QUERY_PARAMS : {'status': '1=1'}
+    RESPONSE_STATUS: 200
   → GET /api/products/<id>
     QUERY_PARAMS : {'id': 'AND 1=1'}
     RESPONSE_STATUS: 500
+  → POST /api/products/search
+    REQUEST_BODY : {'q': 'AND 1=1'}
+    RESPONSE_STATUS: 405
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+[LocalLLM] LoRA checkpoint saved → results/grpo_checkpoints/epoch_007
+  Epoch   7 | loss=0.0231 | reward=  6.51 [3.1 … 18.9]
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR '1'='1"}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR 1=1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+[LocalLLM] LoRA checkpoint saved → results/grpo_checkpoints/epoch_008
+  Epoch   8 | loss=0.0025 | reward=  6.74 [3.3 … 12.9]
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR 1=1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR 1=1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR 1=1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR '1'='1"}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': '1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR 1=1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/orders
+    QUERY_PARAMS : {'status': 'AND 1=2'}
+    RESPONSE_STATUS: 200
+  → GET /api/orders
+    QUERY_PARAMS : {'status': 'AND 1=1'}
+    RESPONSE_STATUS: 200
+  → GET /api/products/search
+    QUERY_PARAMS : {'q': 'AND 1=1'}
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/orders
+    QUERY_PARAMS : {'status': '1=1'}
+    RESPONSE_STATUS: 200
+  → POST /api/orders
+    REQUEST_BODY : {'status': '1=1'}
+    RESPONSE_STATUS: 405
+  → GET /api/orders
+    QUERY_PARAMS : {'status': 'AND 1=2'}
+    RESPONSE_STATUS: 200
+  → POST /api/products/search
+    REQUEST_BODY : {'q': "' OR 1=1"}
+    RESPONSE_STATUS: 405
+  → GET /api/orders
+    QUERY_PARAMS : {'status': 'AND 1=2'}
+    RESPONSE_STATUS: 200
+  → GET /api/products/search
+    QUERY_PARAMS : {'q': "' OR '1'='1"}
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+[LocalLLM] LoRA checkpoint saved → results/grpo_checkpoints/epoch_009
+  Epoch   9 | loss=-0.0078 | reward=  7.86 [3.3 … 14.2]
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "1'"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR 1=1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR '1'='1"}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR '1'='1"}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': '1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
   → GET /api/info
     RESPONSE_STATUS: 200
   → GET /api/info
@@ -328,11 +1539,26 @@ Phase 4: GRPO Training (10 epochs, G=4 rollouts/scenario)...
     REQUEST_BODY : {'username': '1=1'}
     RESPONSE_STATUS: 401
   → POST /api/login
-    REQUEST_BODY : {'username': 'AND 1=1'}
+    REQUEST_BODY : {'username': '1=1'}
     RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
   → POST /api/login
     REQUEST_BODY : {'username': 'AND 1=1'}
     RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/products/search
+    QUERY_PARAMS : {'q': 'AND 1=1'}
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
   → POST /api/login
     REQUEST_BODY : {'username': 'AND 1=1'}
     RESPONSE_STATUS: 401
@@ -343,8 +1569,604 @@ Phase 4: GRPO Training (10 epochs, G=4 rollouts/scenario)...
     REQUEST_BODY : {'username': '1=1'}
     RESPONSE_STATUS: 401
   → POST /api/login
+    REQUEST_BODY : {'username': '1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': '1=1'}
+    RESPONSE_STATUS: 401
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/products/search
+    REQUEST_BODY : {'q': 'AND 1=1'}
+    RESPONSE_STATUS: 405
+  → GET /api/orders
+    QUERY_PARAMS : {'status': '1=1'}
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR '1'='1"}
+    RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
     REQUEST_BODY : {'username': "' OR '1'='1"}
     RESPONSE_STATUS: 401
   → POST /api/login
     REQUEST_BODY : {'username': "' OR '1'='1"}
     RESPONSE_STATUS: 401
+  → GET /api/info
+    RESPONSE_STATUS: 200
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+[LocalLLM] LoRA checkpoint saved → results/grpo_checkpoints/epoch_010
+  Epoch  10 | loss=0.0139 | reward=  6.69 [3.0 … 14.6]
+
+[Evaluator] Running eval: mid_grpo_epoch_10
+  Scenario: Eval: Easy Tier | episode 1/2
+------------------------------------------------------------
+  ▶ STEP 0 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.40  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 1 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"near \\"1\\": syntax error","status":"error"} '
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 2 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"near \\"1\\": syntax error","status":"error"} '
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 3 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : " OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"near \\"1\\": syntax error","status":"error"} '
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 4 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"near \\"1\\": syntax error","status":"error"} '
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 5 | stop  reason='parse_error'
+    RESPONSE: status=n/a
+    REWARD  : -0.10  |  findings so far: 0
+  Scenario: Eval: Easy Tier | episode 2/2
+------------------------------------------------------------
+  ▶ STEP 0 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.40  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 1 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "1'"
+  → POST /api/login
+    REQUEST_BODY : {'username': "1'"}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:unrecognized token', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"unrecognized token: \\"\'1\'\' AND password=\'\'\\"","status":"error"} '
+    REWARD  : +1.70  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 2 | stop  reason='parse_error'
+    RESPONSE: status=n/a
+    REWARD  : -0.10  |  findings so far: 0
+  Scenario: Eval: Medium Tier | episode 1/2
+------------------------------------------------------------
+  ▶ STEP 0 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.40  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 1 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 2 | stop  reason='parse_error'
+    RESPONSE: status=n/a
+    REWARD  : -0.10  |  findings so far: 0
+  Scenario: Eval: Medium Tier | episode 2/2
+------------------------------------------------------------
+  ▶ STEP 0 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.40  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 1 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"near \\"1\\": syntax error","status":"error"} '
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 2 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "' OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR '1'='1"}
+    RESPONSE_STATUS: 401
+    RESPONSE: status=401
+    BODY    : '{"message":"Invalid credentials","status":"fail"} '
+    REWARD  : -0.00  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 3 | stop  reason='parse_error'
+    RESPONSE: status=n/a
+    REWARD  : -0.10  |  findings so far: 0
+  Scenario: Eval: Blind Tier | episode 1/2
+------------------------------------------------------------
+  ▶ STEP 0 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.40  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 1 | inject_payload
+    REQUEST : POST /api/products/search
+    PARAM   : 'q'
+    PAYLOAD : "OR '1'='1"
+  → POST /api/products/search
+    REQUEST_BODY : {'q': "OR '1'='1"}
+    RESPONSE_STATUS: 405
+    RESPONSE: status=405
+    BODY    : '<!doctype html> <html lang=en> <title>405 Method Not Allowed</title> <h1>Method Not Allowed</h1> <p>The method is not allowed for the requested URL.</p> '
+    REWARD  : -0.00  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 2 | stop  reason='parse_error'
+    RESPONSE: status=n/a
+    REWARD  : -0.10  |  findings so far: 0
+  Scenario: Eval: Blind Tier | episode 2/2
+------------------------------------------------------------
+  ▶ STEP 0 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.40  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 1 | inject_payload
+    REQUEST : POST /api/users/<id>/profile
+    PARAM   : 'id'
+    PAYLOAD : 'AND 1=2'
+  → POST /api/users/<id>/profile
+    REQUEST_BODY : {'id': 'AND 1=2'}
+    RESPONSE_STATUS: 405
+    RESPONSE: status=405
+    BODY    : '<!doctype html> <html lang=en> <title>405 Method Not Allowed</title> <h1>Method Not Allowed</h1> <p>The method is not allowed for the requested URL.</p> '
+    REWARD  : -0.00  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 2 | stop  reason='parse_error'
+    RESPONSE: status=n/a
+    REWARD  : -0.10  |  findings so far: 0
+[Evaluator] mid_grpo_epoch_10: DCS=0.000  AFS=0.451  TP=0.0  FP=0.0
+[Evaluator] Snapshot saved → results/grpo/mid_epoch_010.json
+  → Mid-eval: DCS=0.000  AFS=0.451
+
+Phase 5: Post-GRPO evaluation (after epoch 10)...
+
+[Evaluator] Running eval: post_grpo_epoch_10
+  Scenario: Eval: Easy Tier | episode 1/2
+------------------------------------------------------------
+  ▶ STEP 0 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.40  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 1 | http_request
+    REQUEST : POST http://127.0.0.1:5001/api/login
+    PARAM   : ''
+    PAYLOAD : ''
+  → POST /api/login
+    RESPONSE_STATUS: 401
+    RESPONSE: status=401
+    BODY    : '{"message":"Invalid credentials","status":"fail"} '
+    REWARD  : -0.30  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 2 | stop  reason='parse_error'
+    RESPONSE: status=n/a
+    REWARD  : -0.10  |  findings so far: 0
+  Scenario: Eval: Easy Tier | episode 2/2
+------------------------------------------------------------
+  ▶ STEP 0 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.40  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 1 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "' OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR '1'='1"}
+    RESPONSE_STATUS: 401
+    RESPONSE: status=401
+    BODY    : '{"message":"Invalid credentials","status":"fail"} '
+    REWARD  : -0.00  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 2 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"near \\"1\\": syntax error","status":"error"} '
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 3 | stop  reason='parse_error'
+    RESPONSE: status=n/a
+    REWARD  : -0.10  |  findings so far: 0
+  Scenario: Eval: Medium Tier | episode 1/2
+------------------------------------------------------------
+  ▶ STEP 0 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.40  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 1 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"near \\"1\\": syntax error","status":"error"} '
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 2 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"near \\"1\\": syntax error","status":"error"} '
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 3 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : " OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"near \\"1\\": syntax error","status":"error"} '
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 4 | stop  reason='parse_error'
+    RESPONSE: status=n/a
+    REWARD  : -0.10  |  findings so far: 0
+  Scenario: Eval: Medium Tier | episode 2/2
+------------------------------------------------------------
+  ▶ STEP 0 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.40  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 1 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : " OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': " OR '1'='1"}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"near \\"1\\": syntax error","status":"error"} '
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 2 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "1'='1"}
+    RESPONSE_STATUS: 401
+    RESPONSE: status=401
+    BODY    : '{"message":"Invalid credentials","status":"fail"} '
+    REWARD  : -0.00  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 3 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"near \\"1\\": syntax error","status":"error"} '
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 4 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : 'AND 1=1'
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+    RESPONSE: status=401
+    BODY    : '{"message":"Invalid credentials","status":"fail"} '
+    REWARD  : -0.00  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 5 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "' OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "' OR '1'='1"}
+    RESPONSE_STATUS: 401
+    RESPONSE: status=401
+    BODY    : '{"message":"Invalid credentials","status":"fail"} '
+    REWARD  : -0.00  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 6 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"near \\"1\\": syntax error","status":"error"} '
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 7 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "1'='1"}
+    RESPONSE_STATUS: 401
+    RESPONSE: status=401
+    BODY    : '{"message":"Invalid credentials","status":"fail"} '
+    REWARD  : -0.00  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 8 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"near \\"1\\": syntax error","status":"error"} '
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 9 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : '1=1'
+  → POST /api/login
+    REQUEST_BODY : {'username': '1=1'}
+    RESPONSE_STATUS: 401
+    RESPONSE: status=401
+    BODY    : '{"message":"Invalid credentials","status":"fail"} '
+    REWARD  : -0.00  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 10 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : "OR '1'='1"
+  → POST /api/login
+    REQUEST_BODY : {'username': "OR '1'='1"}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"near \\"1\\": syntax error","status":"error"} '
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 11 | stop  reason='parse_error'
+    RESPONSE: status=n/a
+    REWARD  : -0.10  |  findings so far: 0
+  Scenario: Eval: Blind Tier | episode 1/2
+------------------------------------------------------------
+  ▶ STEP 0 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.40  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 1 | inject_payload
+    REQUEST : GET /api/users/<id>/profile
+    PARAM   : 'id'
+    PAYLOAD : 'AND 1=1'
+  → GET /api/users/<id>/profile
+    QUERY_PARAMS : {'id': 'AND 1=1'}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"near \\"<\\": syntax error","status":"error"} '
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 2 | inject_payload
+    REQUEST : POST /api/users/<id>/profile
+    PARAM   : 'id'
+    PAYLOAD : '1=1'
+  → POST /api/users/<id>/profile
+    REQUEST_BODY : {'id': '1=1'}
+    RESPONSE_STATUS: 405
+    RESPONSE: status=405
+    BODY    : '<!doctype html> <html lang=en> <title>405 Method Not Allowed</title> <h1>Method Not Allowed</h1> <p>The method is not allowed for the requested URL.</p> '
+    REWARD  : -0.00  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 3 | inject_payload
+    REQUEST : GET /api/profile
+    PARAM   : 'id'
+    PAYLOAD : '1'
+  → GET /api/profile
+    QUERY_PARAMS : {'id': '1'}
+    RESPONSE_STATUS: 404
+    RESPONSE: status=404
+    BODY    : '<!doctype html> <html lang=en> <title>404 Not Found</title> <h1>Not Found</h1> <p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try agai'
+    REWARD  : -0.00  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 4 | stop  reason='parse_error'
+    RESPONSE: status=n/a
+    REWARD  : -0.10  |  findings so far: 0
+  Scenario: Eval: Blind Tier | episode 2/2
+------------------------------------------------------------
+  ▶ STEP 0 | enumerate_endpoints
+  → GET /api/info
+    RESPONSE_STATUS: 200
+    RESPONSE: status=n/a
+    REWARD  : +3.40  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 1 | inject_payload
+    REQUEST : GET /api/orders
+    PARAM   : 'status'
+    PAYLOAD : '1=1'
+  → GET /api/orders
+    QUERY_PARAMS : {'status': '1=1'}
+    RESPONSE_STATUS: 200
+    RESPONSE: status=200
+    BODY    : '{"count":0,"orders":[]} '
+    REWARD  : -0.00  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 2 | inject_payload
+    REQUEST : GET /api/users/<id>/profile
+    PARAM   : 'id'
+    PAYLOAD : 'AND 1=1'
+  → GET /api/users/<id>/profile
+    QUERY_PARAMS : {'id': 'AND 1=1'}
+    RESPONSE_STATUS: 500
+    RESPONSE: status=500
+    SIGNALS : ['sql_error:syntax error', 'sql_error:near', 'server_error:500']  ← injection detected!
+    BODY    : '{"message":"near \\"<\\": syntax error","status":"error"} '
+    REWARD  : +3.20  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 3 | inject_payload
+    REQUEST : POST /api/login
+    PARAM   : 'username'
+    PAYLOAD : 'AND 1=1'
+  → POST /api/login
+    REQUEST_BODY : {'username': 'AND 1=1'}
+    RESPONSE_STATUS: 401
+    RESPONSE: status=401
+    BODY    : '{"message":"Invalid credentials","status":"fail"} '
+    REWARD  : -0.00  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 4 | inject_payload
+    REQUEST : GET /api/profile
+    PARAM   : 'id'
+    PAYLOAD : '1'
+  → GET /api/profile
+    QUERY_PARAMS : {'id': '1'}
+    RESPONSE_STATUS: 404
+    RESPONSE: status=404
+    BODY    : '<!doctype html> <html lang=en> <title>404 Not Found</title> <h1>Not Found</h1> <p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try agai'
+    REWARD  : -0.00  |  findings so far: 0
+------------------------------------------------------------
+  ▶ STEP 5 | stop  reason='parse_error'
+    RESPONSE: status=n/a
+    REWARD  : -0.10  |  findings so far: 0
+[Evaluator] post_grpo_epoch_10: DCS=0.000  AFS=0.435  TP=0.0  FP=0.0
+[Evaluator] Snapshot saved → results/grpo/post_grpo.json
+
+Phase 6: Full KPI comparison — Before vs After GRPO
+                                         GRPO Before → After — Full KPI Comparison                                          
+┏━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━┓
+┃ KPI             ┃ Category      ┃ Before (pre_grpo_epoch_0) ┃ After (post_grpo_epoch_10) ┃  Delta ┃ Target ┃ Status      ┃
+┡━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━┩
+│ DCS             │ Effectiveness │                     0.250 │                      0.000 │ -0.250 │ ≥ 0.75 │ ⚠ regressed │
+├─────────────────┼───────────────┼───────────────────────────┼────────────────────────────┼────────┼────────┼─────────────┤
+│ True Positives  │ Effectiveness │                     0.333 │                      0.000 │ -0.333 │    max │ ⚠ regressed │
+├─────────────────┼───────────────┼───────────────────────────┼────────────────────────────┼────────┼────────┼─────────────┤
+│ False Positives │ Effectiveness │                     0.167 │                      0.000 │ -0.167 │    = 0 │ ✅ improved │
+├─────────────────┼───────────────┼───────────────────────────┼────────────────────────────┼────────┼────────┼─────────────┤
+│ STC Score       │ Efficiency    │                     1.038 │                      0.940 │ -0.098 │ ≥ 0.60 │ ⚠ regressed │
+├─────────────────┼───────────────┼───────────────────────────┼────────────────────────────┼────────┼────────┼─────────────┤
+│ TER             │ Efficiency    │                     1.451 │                      0.000 │ -1.451 │ ≥ 0.05 │ ⚠ regressed │
+├─────────────────┼───────────────┼───────────────────────────┼────────────────────────────┼────────┼────────┼─────────────┤
+│ TIE             │ Efficiency    │                     0.486 │                      0.478 │ -0.008 │ ≥ 0.60 │ ➡ stable    │
+├─────────────────┼───────────────┼───────────────────────────┼────────────────────────────┼────────┼────────┼─────────────┤
+│ HIR             │ Autonomy      │                     0.000 │                      0.000 │ +0.000 │ ≤ 0.05 │ ➡ stable    │
+├─────────────────┼───────────────┼───────────────────────────┼────────────────────────────┼────────┼────────┼─────────────┤
+│ DERR            │ Autonomy      │                     0.833 │                      0.667 │ -0.167 │ ≥ 0.70 │ ⚠ regressed │
+├─────────────────┼───────────────┼───────────────────────────┼────────────────────────────┼────────┼────────┼─────────────┤
+│ STA             │ Autonomy      │                     0.167 │                      0.000 │ -0.167 │ ≥ 0.80 │ ⚠ regressed │
+├─────────────────┼───────────────┼───────────────────────────┼────────────────────────────┼────────┼────────┼─────────────┤
+│ AVDS            │ Diversity     │                     0.111 │                      0.000 │ -0.111 │ ≥ 0.50 │ ⚠ regressed │
+├─────────────────┼───────────────┼───────────────────────────┼────────────────────────────┼────────┼────────┼─────────────┤
+│ AFS             │ Composite     │                     0.576 │                      0.435 │ -0.141 │ ≥ 0.60 │ ⚠ regressed │
+├─────────────────┼───────────────┼───────────────────────────┼────────────────────────────┼────────┼────────┼─────────────┤
+│ Mean Reward     │ RL Signal     │                     5.692 │                      9.117 │ +3.425 │    max │ ✅ improved │
+└─────────────────┴───────────────┴───────────────────────────┴────────────────────────────┴────────┴────────┴─────────────┘
+
+⚠  Regressions detected: dcs: -0.250, afs: -0.141, stc_score: -0.098
+
+Done. Results saved to results/grpo/
+LoRA checkpoints in results/grpo_checkpoints/
+Full log saved to grpo_training.log
